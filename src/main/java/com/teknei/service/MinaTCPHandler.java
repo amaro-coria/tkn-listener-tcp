@@ -33,6 +33,7 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		String strMessage = new String(((IoBuffer)message).array()).trim();
+		//String strMessage = message.toString();
 		log.info("Message received: |{}|", strMessage);
 		if(strMessage.matches(regexPattern)){
 			log.info(strMessage.toString());
@@ -43,6 +44,12 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 			Double longitude = Double.parseDouble(messageSplited[4]);
 			Long epoch = Long.parseLong(messageSplited[5], 16);
 			saveReceNave(idVehi, idRecoNave, latitude, longitude, epoch);
+			StringBuilder sb = new StringBuilder();
+			sb.append(idVehi);
+			sb.append(",");
+			sb.append(Long.toHexString(idRecoNave));
+			log.info("Returning: {}", sb.toString());
+			session.write(IoBuffer.wrap(sb.toString().getBytes()));
 		}
 	}
 
