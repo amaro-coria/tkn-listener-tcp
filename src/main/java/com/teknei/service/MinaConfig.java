@@ -11,6 +11,8 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -26,7 +28,7 @@ public class MinaConfig {
 	private int port;
 	@Autowired
 	private ReceNaveRestClient clientReceNave;
-	
+	private static final Logger log = LoggerFactory.getLogger(MinaConfig.class);
 	@PostConstruct
 	private void postConstruct(){
 		initMina();
@@ -36,11 +38,12 @@ public class MinaConfig {
 	private void initMina(){
 		IoAcceptor acceptor = new NioSocketAcceptor();
         acceptor.getFilterChain().addLast( "logger", new LoggingFilter() );
-        acceptor.getFilterChain().addLast( "codec", new ProtocolCodecFilter( new TextLineCodecFactory( Charset.forName( "UTF-8" ))));
+        //acceptor.getFilterChain().addLast( "codec", new ProtocolCodecFilter( new TextLineCodecFactory( Charset.forName( "UTF-8" ))));
         acceptor.setHandler( new MinaTCPHandler(clientReceNave) );
         acceptor.getSessionConfig().setReadBufferSize( 2048 );
         acceptor.getSessionConfig().setIdleTime( IdleStatus.BOTH_IDLE, 10 );
-        acceptor.bind( new InetSocketAddress(5050) );
+        acceptor.bind( new InetSocketAddress(port) );
+        log.info("TCP Listener bind to port: {}", port);
 	}
 
 }
