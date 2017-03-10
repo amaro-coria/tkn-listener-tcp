@@ -1,3 +1,4 @@
 tkn:
-  tcp:
+  listener:
+    type: tcp
     port: 5050

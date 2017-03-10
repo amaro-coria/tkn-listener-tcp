@@ -9,7 +9,8 @@ import javax.annotation.PostConstruct;
 
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
-import org.apache.mina.filter.logging.LoggingFilter;
+import org.apache.mina.transport.socket.DatagramSessionConfig;
+import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,17 +34,33 @@ public class MinaConfig {
 	/*
 	 * Injected values
 	 */
-	@Value("${tkn.tcp.port}")
+	@Value("${tkn.listener.port}")
 	private int port;
+	@Value("${tkn.listener.type}")
+	private String type;
 	@Autowired
 	private ReceNaveRestClient clientReceNave;
+	private static final String TCP_TYPE = "TCP";
+	private static final String UDP_TYPE="UDP";
 
 	/**
 	 * Post-construct method
 	 */
 	@PostConstruct
 	private void postConstruct() {
-		initMina();
+		type = type.trim().toUpperCase();
+		switch (type) {
+		case TCP_TYPE:
+			initMina();
+			break;
+		case UDP_TYPE:
+			initMinaUdp();
+			break;
+		default:
+			initMina();
+			initMinaUdp();
+			break;
+		}
 	}
 
 	/**
@@ -52,12 +69,22 @@ public class MinaConfig {
 	@SneakyThrows
 	private void initMina() {
 		IoAcceptor acceptor = new NioSocketAcceptor();
-		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
-		acceptor.setHandler(new MinaTCPHandler(clientReceNave));
+		// acceptor.getFilterChain().addLast("logger", new LoggingFilter());
+		acceptor.setHandler(new MinaTKNHandler(clientReceNave));
 		acceptor.getSessionConfig().setReadBufferSize(2048);
 		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
 		acceptor.bind(new InetSocketAddress(port));
 		initMinaLog(port);
+	}
+
+	@SneakyThrows
+	private void initMinaUdp() {
+		NioDatagramAcceptor acceptor = new NioDatagramAcceptor();
+		acceptor.setHandler(new MinaTKNHandler(clientReceNave));
+		DatagramSessionConfig dcfg = acceptor.getSessionConfig();
+		dcfg.setReuseAddress(true);
+		acceptor.bind(new InetSocketAddress(port));
+		initMinaLogUDP(port);
 	}
 
 	private void initMinaLog(int port) {
@@ -68,6 +95,18 @@ public class MinaConfig {
 		System.out.println("       ###      ####         ######  ");
 		System.out.println("       ###       ####        ###     ");
 		System.out.println("       ###        #######    ###     ");
+		System.out.println("Bound to port: " + port);
+		System.out.println("##############################################");
+	}
+
+	private void initMinaLogUDP(int port) {
+		System.out.println("##############################################");
+		System.out.println("    ###   ###   ######     ######   ");
+		System.out.println("    ###   ###   #### ##    ###  ### ");
+		System.out.println("    ###   ###   ###   ##   ###  ###");
+		System.out.println("    ###   ###   ###   ##   ######  ");
+		System.out.println("    ###   ###   ###  ##    ###     ");
+		System.out.println("    #########   ######     ###     ");
 		System.out.println("Bound to port: " + port);
 		System.out.println("##############################################");
 	}

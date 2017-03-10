@@ -20,12 +20,12 @@ import com.teknei.service.client.ReceNaveRestClient;
  * @since 1.0.0
  *
  */
-public class MinaTCPHandler extends IoHandlerAdapter {
+public class MinaTKNHandler extends IoHandlerAdapter {
 
 	/**
 	 * Default-constructor
 	 */
-	public MinaTCPHandler() {
+	public MinaTKNHandler() {
 	}
 
 	/**
@@ -33,12 +33,12 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 	 * 
 	 * @param client
 	 */
-	public MinaTCPHandler(ReceNaveRestClient client) {
+	public MinaTKNHandler(ReceNaveRestClient client) {
 		super();
 		this.client = client;
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(MinaTCPHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(MinaTKNHandler.class);
 	private final String regexPattern = "F1,\\d+,\\w+,[-]?\\d+.\\d+,[-]?\\d+.\\d+,\\w+";
 	private ReceNaveRestClient client;
 
@@ -65,7 +65,7 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		String strMessage = new String(((IoBuffer) message).array()).trim();
-		log.info("Message received: |{}|", strMessage);
+		log.debug("Message received: |{}|", strMessage);
 		if (strMessage.matches(regexPattern)) {
 			log.debug(strMessage.toString());
 			String[] messageSplited = strMessage.toString().split(",");
@@ -79,7 +79,7 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 			sb.append(idVehi);
 			sb.append(",");
 			sb.append(Long.toHexString(idRecoNave));
-			log.info("Returning: {}", sb.toString());
+			log.debug("Returning: {}", sb.toString());
 			session.write(IoBuffer.wrap(sb.toString().getBytes()));
 		}
 	}
@@ -93,7 +93,7 @@ public class MinaTCPHandler extends IoHandlerAdapter {
 	 */
 	@Override
 	public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
-		log.info("Session idle: {}", session.getLocalAddress().toString());
+		log.debug("Session idle: {}", session.getLocalAddress().toString());
 	}
 
 	/**
